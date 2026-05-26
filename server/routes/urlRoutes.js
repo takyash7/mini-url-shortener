@@ -34,7 +34,7 @@ router.post("/shorten", (req, res) => {
     query.run(shortCode, url);
 
     res.json({
-      shortUrl: `https://YOUR-RENDER-URL.onrender.com/${shortCode}`,
+      shortUrl: `https://mini-url-shortener-api.onrender.com/${shortCode}`,
     });
 
   } catch (error) {

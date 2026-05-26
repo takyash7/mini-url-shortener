@@ -24,7 +24,7 @@ function App() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/shorten", {
+      const response = await fetch("https://mini-url-shortener-api.onrender.com", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
