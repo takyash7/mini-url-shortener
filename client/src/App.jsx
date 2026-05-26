@@ -1,122 +1,111 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, useEffect } from "react";
+import "./index.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [url, setUrl] = useState("");
+  const [shortUrl, setShortUrl] = useState("");
+  const [error, setError] = useState("");
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    const savedHistory =
+      JSON.parse(localStorage.getItem("shortenedUrls")) || [];
+
+    setHistory(savedHistory);
+  }, []);
+
+  const handleShorten = async () => {
+    setError("");
+    setShortUrl("");
+
+    if (!url.trim()) {
+      setError("Please enter a URL");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/shorten", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        setError(data.error);
+        return;
+      }
+
+      setShortUrl(data.shortUrl);
+
+      const updatedHistory = [data.shortUrl, ...history].slice(0, 5);
+
+      setHistory(updatedHistory);
+
+      localStorage.setItem(
+        "shortenedUrls",
+        JSON.stringify(updatedHistory)
+      );
+
+      setUrl("");
+    } catch (error) {
+      setError("Something went wrong");
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="container">
+      <h1>Mini URL Shortener</h1>
 
-      <div className="ticks"></div>
+      <input
+        type="text"
+        placeholder="Enter your long URL"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+      />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <button onClick={handleShorten}>
+        Shorten URL
+      </button>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {error && <p className="error">{error}</p>}
+
+      {shortUrl && (
+        <div className="result">
+          <p>Short URL:</p>
+
+          <a
+            href={shortUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {shortUrl}
+          </a>
+        </div>
+      )}
+
+      <div className="history">
+        <h3>Last 5 Shortened URLs</h3>
+
+        <ul>
+          {history.map((item, index) => (
+            <li key={index}>
+              <a
+                href={item}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {item}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;
